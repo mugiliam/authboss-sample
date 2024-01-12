@@ -29,3 +29,5 @@ _testmain.go
 
 oauth2.toml
 authboss-sample
+__debug_*
+.vscode/launch.json
