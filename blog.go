@@ -15,26 +15,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/volatiletech/authboss/v3"
 	_ "github.com/volatiletech/authboss/v3/auth"
 	"github.com/volatiletech/authboss/v3/confirm"
 	"github.com/volatiletech/authboss/v3/defaults"
 	"github.com/volatiletech/authboss/v3/lock"
 	_ "github.com/volatiletech/authboss/v3/logout"
-	aboauth "github.com/volatiletech/authboss/v3/oauth2"
-	"github.com/volatiletech/authboss/v3/otp/twofactor"
-	"github.com/volatiletech/authboss/v3/otp/twofactor/sms2fa"
-	"github.com/volatiletech/authboss/v3/otp/twofactor/totp2fa"
 	_ "github.com/volatiletech/authboss/v3/recover"
 	_ "github.com/volatiletech/authboss/v3/register"
 	"github.com/volatiletech/authboss/v3/remember"
 
-	"github.com/volatiletech/authboss-clientstate"
-	"github.com/volatiletech/authboss-renderer"
-
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
+	abclientstate "github.com/volatiletech/authboss-clientstate"
+	abrenderer "github.com/volatiletech/authboss-renderer"
 
 	"github.com/aarondl/tpl"
 	"github.com/go-chi/chi"
@@ -152,50 +144,50 @@ func setupAuthboss() {
 			"register": {"email", "name", "password"},
 		},
 	}
+	/*
+		oauthcreds := struct {
+			ClientID     string `toml:"client_id"`
+			ClientSecret string `toml:"client_secret"`
+		}{}
 
-	oauthcreds := struct {
-		ClientID     string `toml:"client_id"`
-		ClientSecret string `toml:"client_secret"`
-	}{}
-
-	// Set up 2fa
-	twofaRecovery := &twofactor.Recovery{Authboss: ab}
-	if err := twofaRecovery.Setup(); err != nil {
-		panic(err)
-	}
-
-	totp := &totp2fa.TOTP{Authboss: ab}
-	if err := totp.Setup(); err != nil {
-		panic(err)
-	}
-
-	sms := &sms2fa.SMS{Authboss: ab, Sender: smsLogSender{}}
-	if err := sms.Setup(); err != nil {
-		panic(err)
-	}
-
-	// Set up Google OAuth2 if we have credentials in the
-	// file oauth2.toml for it.
-	_, err := toml.DecodeFile("oauth2.toml", &oauthcreds)
-	if err == nil && len(oauthcreds.ClientID) != 0 && len(oauthcreds.ClientSecret) != 0 {
-		fmt.Println("oauth2.toml exists, configuring google oauth2")
-		ab.Config.Modules.OAuth2Providers = map[string]authboss.OAuth2Provider{
-			"google": {
-				OAuth2Config: &oauth2.Config{
-					ClientID:     oauthcreds.ClientID,
-					ClientSecret: oauthcreds.ClientSecret,
-					Scopes:       []string{`profile`, `email`},
-					Endpoint:     google.Endpoint,
-				},
-				FindUserDetails: aboauth.GoogleUserDetails,
-			},
+		// Set up 2fa
+		twofaRecovery := &twofactor.Recovery{Authboss: ab}
+		if err := twofaRecovery.Setup(); err != nil {
+			panic(err)
 		}
-	} else if os.IsNotExist(err) {
-		fmt.Println("oauth2.toml doesn't exist, not registering oauth2 handling")
-	} else {
-		fmt.Println("error loading oauth2.toml:", err)
-	}
 
+		totp := &totp2fa.TOTP{Authboss: ab}
+		if err := totp.Setup(); err != nil {
+			panic(err)
+		}
+
+		sms := &sms2fa.SMS{Authboss: ab, Sender: smsLogSender{}}
+		if err := sms.Setup(); err != nil {
+			panic(err)
+		}
+
+		// Set up Google OAuth2 if we have credentials in the
+		// file oauth2.toml for it.
+		_, err := toml.DecodeFile("oauth2.toml", &oauthcreds)
+		if err == nil && len(oauthcreds.ClientID) != 0 && len(oauthcreds.ClientSecret) != 0 {
+			fmt.Println("oauth2.toml exists, configuring google oauth2")
+			ab.Config.Modules.OAuth2Providers = map[string]authboss.OAuth2Provider{
+				"google": {
+					OAuth2Config: &oauth2.Config{
+						ClientID:     oauthcreds.ClientID,
+						ClientSecret: oauthcreds.ClientSecret,
+						Scopes:       []string{`profile`, `email`},
+						Endpoint:     google.Endpoint,
+					},
+					FindUserDetails: aboauth.GoogleUserDetails,
+				},
+			}
+		} else if os.IsNotExist(err) {
+			fmt.Println("oauth2.toml doesn't exist, not registering oauth2 handling")
+		} else {
+			fmt.Println("error loading oauth2.toml:", err)
+		}
+	*/
 	// Initialize authboss (instantiate modules etc.)
 	if err := ab.Init(); err != nil {
 		panic(err)
