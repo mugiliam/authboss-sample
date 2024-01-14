@@ -39,14 +39,14 @@ func logger(h http.Handler) http.Handler {
 				fmt.Println()
 			}
 		}
-
-		if *flagDebugDB {
-			fmt.Println("Database:")
-			for _, u := range database.Users {
-				fmt.Printf("! %#v\n", u)
+		/*
+			if *flagDebugDB {
+				fmt.Println("Database:")
+				for _, u := range database.Users {
+					fmt.Printf("! %#v\n", u)
+				}
 			}
-		}
-
+		*/
 		if *flagDebugCTX {
 			if val := r.Context().Value(authboss.CTXKeyData); val != nil {
 				fmt.Printf("CTX Data: %s", spew.Sdump(val))

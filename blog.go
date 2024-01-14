@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mugiliam/hatchstorer/authstorer"
 	"github.com/volatiletech/authboss/v3"
 	_ "github.com/volatiletech/authboss/v3/auth"
 	"github.com/volatiletech/authboss/v3/confirm"
@@ -51,7 +52,8 @@ var (
 
 var (
 	ab        = authboss.New()
-	database  = NewMemStorer()
+	database  = authstorer.NewStorer()
+	_         = NewMemStorer()
 	schemaDec = schema.NewDecoder()
 
 	sessionStore abclientstate.SessionStorer
@@ -311,7 +313,7 @@ func layoutData(w http.ResponseWriter, r **http.Request) authboss.HTMLData {
 	currentUserName := ""
 	userInter, err := ab.LoadCurrentUser(r)
 	if userInter != nil && err == nil {
-		currentUserName = userInter.(*User).Name
+		currentUserName = userInter.GetPID()
 	}
 
 	return authboss.HTMLData{
