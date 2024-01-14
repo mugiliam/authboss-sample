@@ -16,6 +16,8 @@ import (
 	"time"
 
 	"github.com/mugiliam/hatchstorer/authstorer"
+	"github.com/mugiliam/hatchstorer/cookiestorer"
+	"github.com/mugiliam/hatchstorer/sessionstorer"
 	"github.com/volatiletech/authboss/v3"
 	_ "github.com/volatiletech/authboss/v3/auth"
 	"github.com/volatiletech/authboss/v3/confirm"
@@ -26,13 +28,11 @@ import (
 	_ "github.com/volatiletech/authboss/v3/register"
 	"github.com/volatiletech/authboss/v3/remember"
 
-	abclientstate "github.com/volatiletech/authboss-clientstate"
 	abrenderer "github.com/volatiletech/authboss-renderer"
 
 	"github.com/aarondl/tpl"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/schema"
-	"github.com/gorilla/sessions"
 	"github.com/justinas/nosurf"
 )
 
@@ -56,8 +56,8 @@ var (
 	_         = NewMemStorer()
 	schemaDec = schema.NewDecoder()
 
-	sessionStore abclientstate.SessionStorer
-	cookieStore  abclientstate.CookieStorer
+	sessionStore sessionstorer.SessionStorer
+	cookieStore  cookiestorer.CookieStorer
 
 	templates tpl.Templates
 )
@@ -225,14 +225,14 @@ func main() {
 	// a configuration environment var or file.
 	cookieStoreKey, _ := base64.StdEncoding.DecodeString(`NpEPi8pEjKVjLGJ6kYCS+VTCzi6BUuDzU0wrwXyf5uDPArtlofn2AG6aTMiPmN3C909rsEWMNqJqhIVPGP3Exg==`)
 	sessionStoreKey, _ := base64.StdEncoding.DecodeString(`AbfYwmmt8UCwUuhd9qvfNA9UCuN1cVcKJN1ofbiky6xCyyBj20whe40rJa3Su0WOWLWcPpO1taqJdsEI/65+JA==`)
-	cookieStore = abclientstate.NewCookieStorer(cookieStoreKey, nil)
+	cookieStore = cookiestorer.NewCookieStorer(cookieStoreKey, nil)
 	cookieStore.HTTPOnly = false
 	cookieStore.Secure = false
-	sessionStore = abclientstate.NewSessionStorer(sessionCookieName, sessionStoreKey, nil)
-	cstore := sessionStore.Store.(*sessions.CookieStore)
+	sessionStore = sessionstorer.NewSessionStorer(sessionCookieName, sessionStoreKey, nil)
+	cstore := sessionStore.Store.(*sessionstorer.RediStore)
 	cstore.Options.HttpOnly = false
 	cstore.Options.Secure = false
-	cstore.MaxAge(int((30 * 24 * time.Hour) / time.Second))
+	cstore.SetMaxAge(int((30 * 24 * time.Hour) / time.Second))
 
 	// Initialize authboss
 	setupAuthboss()
