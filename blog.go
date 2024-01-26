@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -33,6 +32,7 @@ import (
 	"github.com/aarondl/tpl"
 	"github.com/go-chi/chi"
 	"github.com/gorilla/schema"
+	"github.com/gorilla/securecookie"
 	"github.com/justinas/nosurf"
 )
 
@@ -223,12 +223,12 @@ func main() {
 	//
 	// We store them in base64 in the example to make it easy if we wanted to move them later to
 	// a configuration environment var or file.
-	cookieStoreKey, _ := base64.StdEncoding.DecodeString(`NpEPi8pEjKVjLGJ6kYCS+VTCzi6BUuDzU0wrwXyf5uDPArtlofn2AG6aTMiPmN3C909rsEWMNqJqhIVPGP3Exg==`)
-	sessionStoreKey, _ := base64.StdEncoding.DecodeString(`AbfYwmmt8UCwUuhd9qvfNA9UCuN1cVcKJN1ofbiky6xCyyBj20whe40rJa3Su0WOWLWcPpO1taqJdsEI/65+JA==`)
-	cookieStore = cookiestorer.NewCookieStorer(cookieStoreKey, nil)
+	//cookieStoreKey, _ := base64.StdEncoding.DecodeString(`NpEPi8pEjKVjLGJ6kYCS+VTCzi6BUuDzU0wrwXyf5uDPArtlofn2AG6aTMiPmN3C909rsEWMNqJqhIVPGP3Exg==`)
+	//sessionStoreKey, _ := base64.StdEncoding.DecodeString(`AbfYwmmt8UCwUuhd9qvfNA9UCuN1cVcKJN1ofbiky6xCyyBj20whe40rJa3Su0WOWLWcPpO1taqJdsEI/65+JA==`)
+	cookieStore = cookiestorer.NewCookieStorer(securecookie.GenerateRandomKey(64), securecookie.GenerateRandomKey(16))
 	cookieStore.HTTPOnly = false
 	cookieStore.Secure = false
-	sessionStore = sessionstorer.NewSessionStorer(sessionCookieName, sessionStoreKey, nil)
+	sessionStore = sessionstorer.NewSessionStorer(sessionCookieName, securecookie.GenerateRandomKey(64), securecookie.GenerateRandomKey(16))
 	cstore := sessionStore.Store.(*sessionstorer.RediStore)
 	cstore.Options.HttpOnly = false
 	cstore.Options.Secure = false
@@ -247,11 +247,11 @@ func main() {
 	// - LoadClientStateMiddleware is required for session/cookie stuff
 	// - remember middleware logs users in if they have a remember token
 	// - dataInjector is for putting data into the request context we need for our template layout
-	mux.Use(logger, nosurfing, ab.LoadClientStateMiddleware, remember.Middleware(ab), dataInjector)
+	mux.Use(logger, nosurfing, ab.LoadClientStateMiddleware, remember.Middleware(ab))
 
 	// Authed routes
 	mux.Group(func(mux chi.Router) {
-		mux.Use(authboss.Middleware2(ab, authboss.RequireNone, authboss.RespondUnauthorized), lock.Middleware(ab), confirm.Middleware(ab))
+		mux.Use(authboss.Middleware2(ab, authboss.RequireNone, authboss.RespondUnauthorized), lock.Middleware(ab), confirm.Middleware(ab), dataInjector)
 		mux.MethodFunc("GET", "/blogs/new", newblog)
 		mux.MethodFunc("GET", "/blogs/{id}/edit", edit)
 		mux.MethodFunc("POST", "/blogs/{id}/edit", update)
@@ -475,7 +475,7 @@ func mustRender(w http.ResponseWriter, r *http.Request, name string, data authbo
 
 	current.MergeKV("csrf_token", nosurf.Token(r))
 	current.Merge(data)
-
+	fmt.Printf("%v\n", current)
 	if *flagAPI {
 		w.Header().Set("Content-Type", "application/json")
 
